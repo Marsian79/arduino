@@ -1,14 +1,3 @@
-/*#define SCL_PORT PORTC
-#define SCL_PIN 5
-#define SDA_PORT PORTC
-#define SDA_PIN 4
-#define I2C_TIMEOUT 100
-//#define I2C_NOINTERRUPT 1
-#include <SoftI2CMaster.h>
-#include <avr/io.h>
-
-//--------------------------------
-*/
 #include <Wire.h>
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiWire.h"
