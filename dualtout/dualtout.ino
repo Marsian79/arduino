@@ -18,11 +18,15 @@
 #define bme280read(reg_addr,reg_data,cnt) I2CRead(BMEI2CADDR,reg_addr,reg_data,cnt)
 #define bme280write(reg_addr,reg_data,cnt) I2CWrite(BMEI2CADDR,reg_addr,reg_data,cnt)
 
+#define SCL 19
+#define SDA 18
 #define POWER 17
 #define M0 16
 #define M1 15
 #define AUX 14
+
 #define BME_DELAY 2
+#define RADIOUP_DELAY 14
 
 uint32_t vcc;
 uint8_t adc;
@@ -130,9 +134,7 @@ uint8_t bme280readid()
 
 uint8_t bme280init()
 {
-  
-  bmeup();
-  if(!bme280readid()){bmedown();return 0;}
+  if(!bme280readid()) return 0;
   
   bme280read(0x88, reg_data, 26);
   
@@ -172,15 +174,12 @@ uint8_t bme280init()
   dig_H6 = (int8_t)reg_data[6];
 
   
-  bmedown();
   return 1;
 }
 
 uint8_t bme280measure()
 {
-  
-  bmeup();
-  if(!bme280readid()){pressure=0;delay(10);bmedown();return 0;}
+  if(!bme280readid()) return 0;
   
   reg_data[0]=0b00000001;bme280write(0xf2, reg_data, 1);
   reg_data[0]=0b00100101;bme280write(0xf4, reg_data, 1);
@@ -224,10 +223,8 @@ uint8_t bme280measure()
   t_fine = var1 + var2;
   temperature = (t_fine * 5 + 128) / 256;
 
-  if (temperature < temperature_min)
-    temperature = temperature_min;
-  else if (temperature > temperature_max)
-    temperature = temperature_max;
+  if (temperature < temperature_min) temperature = temperature_min;
+  else if (temperature > temperature_max) temperature = temperature_max;
 
   
   
@@ -255,13 +252,10 @@ uint8_t bme280measure()
 
     //pressure+=pcal;
     
-    if (pressure < pressure_min)
-      pressure = pressure_min;
-    else if (pressure > pressure_max)
-      pressure = pressure_max;
-  } else {
-    pressure = pressure_min;
+    if (pressure < pressure_min) pressure = pressure_min;
+    else if (pressure > pressure_max) pressure = pressure_max;
   }
+  else pressure = pressure_min;
   
   
   //--------------------------humidity
@@ -281,10 +275,8 @@ uint8_t bme280measure()
   var5 = (var5 > 419430400 ? 419430400 : var5);
   humidity = (uint32_t)(var5 / 4096);
 
-  if (humidity > humidity_max)
-    humidity = humidity_max;
+  if (humidity > humidity_max) humidity = humidity_max;
   
-  bmedown();
   return 1;
 }
 
@@ -298,8 +290,8 @@ void bmedown()
 {
   delay(BME_DELAY);
   digitalWrite(POWER,LOW);
-  digitalWrite(19,LOW);
-  digitalWrite(18,LOW);
+  digitalWrite(SCL,LOW);
+  digitalWrite(SDA,LOW);
 }
 
 void radioup()
@@ -347,16 +339,23 @@ void setup() {
   //Wire.begin();
   i2c_init();
   Serial.begin(115200);
-  bme280init();
+  bmeup();bme280init();bmedown();
 }
 
 void loop() {
   uint32_t buff[4];
+  unsigned long radiouptime;
   
   radioup();//needs 14ms delay
-  bme280measure();readvcc();
+  radiouptime=millis();
+  
+  bmeup(); if(!bme280measure()) pressure=0; bmedown();
+  readvcc();
+  
   buff[0]=temperature;buff[1]=humidity;buff[2]=pressure;buff[3]=vcc;
   //radioup();
+  
+  while((millis()-radiouptime)<=RADIOUP_DELAY) {}
   Serial.write((uint8_t *)buff,sizeof(buff));
   /*Serial.println(temperature/100.0);
   Serial.println(humidity/1000.0);

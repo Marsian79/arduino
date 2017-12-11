@@ -56,13 +56,14 @@ uint8_t I2CRead(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t c
   if(!i2c_start(dev_addr<<1 | I2C_WRITE)) {i2c_stop();return 0;}
   if(!i2c_write(reg_addr)) {i2c_stop();return 0;}
   if(!i2c_rep_start(dev_addr<<1 | I2C_READ)) {i2c_stop();return 0;}
-  for(uint8_t i=0;i<cnt;i++) reg_data[i]=i2c_read(i==cnt-1);
+  for(uint8_t j=0;j<cnt;j++) reg_data[j]=i2c_read(j+1==cnt);
   i2c_stop();
   return 1;
 }
 
 uint8_t I2CWrite(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt)
 {
+  if(cnt==0) return 1;
   if(!i2c_start(dev_addr<<1 | I2C_WRITE)) {i2c_stop();return 0;}
   if(!i2c_write(reg_addr)) {i2c_stop();return 0;}
   for(uint8_t j=0;j<cnt;j++) if(!i2c_write(reg_data[j])) {i2c_stop();return 0;}

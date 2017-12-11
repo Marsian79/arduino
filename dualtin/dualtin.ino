@@ -98,25 +98,7 @@ uint8_t I2CWrite(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t 
   if(Wire.endTransmission()) ret=0;
   return ret;
 }
-/*
-uint8_t I2CRead(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt)
-{
-  if(!i2c_start(dev_addr<<1 | I2C_WRITE)) return 0;
-  if(!i2c_write(reg_addr)) return 0;
-  if(!i2c_rep_start(dev_addr<<1 | I2C_READ)) return 0;
-  for(uint8_t i=0;i<cnt;i++) reg_data[i]=i2c_read(i==cnt-1);
-  i2c_stop();
-  return 1;
-}
 
-uint8_t I2CWrite(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t cnt)
-{
-  if(!i2c_start(dev_addr<<1 | I2C_WRITE)) return 0;
-  if(!i2c_write(reg_addr)) return 0;
-  for(uint8_t j=0;j<cnt;j++) if(!i2c_write(reg_data[j])) return 0;
-  i2c_stop();
-  return 1;
-}*/
 
 uint8_t readsht31()
 {
